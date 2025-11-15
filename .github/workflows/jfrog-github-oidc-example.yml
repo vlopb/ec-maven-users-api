@@ -1,9 +1,9 @@
-name: "Setup JFrog CLI TOKEN Example"
+name: "Setup JFrog CLI with Token"
 
 on: push
 
 permissions:
-  contents: read   # ya no usamos id-token
+  contents: read   # Ya no usamos id-token
 
 jobs:
   build:
@@ -16,10 +16,8 @@ jobs:
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v4
         env:
-          JF_URL: ${{ vars.JF_URL }}                 # Puedes dejar la variable que ya tenías
-          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}   # <--- AGREGA ESTE
-        with:
-          use-jfrog-cli-rc: true                     # necesario cuando usas token
+          JF_URL: ${{ vars.JF_URL }}                 # URL de tu JFrog (variable)
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}   # Token (secreto)
 
       - name: Run JFrog CLI
         run: |
