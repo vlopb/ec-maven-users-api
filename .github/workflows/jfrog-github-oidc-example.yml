@@ -1,28 +1,26 @@
-name: "Setup JFrog CLI OIDC Example"
+name: "Setup JFrog CLI TOKEN Example"
 
 on: push
 
 permissions:
-  # This is required for requesting the OIDC token
-  id-token: write
-  # This is required for actions/checkout
-  contents: read
+  contents: read   # ya no usamos id-token
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v4
         env:
-          JF_URL: ${{ vars.JF_URL }}
+          JF_URL: ${{ vars.JF_URL }}                 # Puedes dejar la variable que ya tenías
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}   # <--- AGREGA ESTE
         with:
-          oidc-provider-name: aldo2510/ec-maven-users-api@github
-      
+          use-jfrog-cli-rc: true                     # necesario cuando usas token
+
       - name: Run JFrog CLI
         run: |
-          # Ping the server
           jf rt ping
