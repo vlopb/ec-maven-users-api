@@ -1,0 +1,41 @@
+pipeline {
+  agent none
+
+  environment {
+    NEXUS_URL   = 'http://34.125.81.169:8081' //cambiar url
+    NEXUS_REPO  = 'raw-releases-v2'
+    APP_NAME    = 'mi-aplicacion-java'
+    NEXUS_CREDS = credentials('nexus_creds')
+  }
+
+  stages {
+    stage('Compilar con Maven') {
+      agent { docker { image 'maven:3.8.4-openjdk-17-slim' } }
+      steps {
+        sh 'mvn -B -DskipTests clean package'
+        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true, onlyIfSuccessful: true
+        stash name: 'jar', includes: 'target/*.jar', allowEmpty: false
+      }
+    }
+
+    stage('Publicar en Nexus (RAW)') {
+      agent { docker { image 'alpine/curl:latest' } }
+      steps {
+        unstash 'jar'
+        sh '''
+          set -e
+          # Resuelve el único JAR generado
+          JAR=$(ls -1 target/*.jar 2>/dev/null | head -n 1)
+          [ -n "$JAR" ] || { echo "No se encontró JAR en target/"; exit 1; }
+    
+          # Usa el nombre real (sin comodín) para el destino
+          DEST="${NEXUS_URL}/repository/${NEXUS_REPO}/${APP_NAME}/${BUILD_NUMBER}/$(basename "$JAR")"
+          echo "Subiendo $JAR -> $DEST"
+    
+          curl --fail -u "${NEXUS_CREDS_USR}:${NEXUS_CREDS_PSW}" -T "$JAR" "$DEST"
+          echo "✅ Upload OK"
+        '''
+      }
+    }
+  }
+}
